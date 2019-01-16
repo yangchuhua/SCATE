@@ -1,0 +1,97 @@
+%\VignetteIndexEntry{Single-cell ATAC-seq Signal Extraction and Enhancement with SCATE}
+%\VignetteDepends{} 
+%\VignetteEngine{knitr::knitr}
+%\VignettePackage{SCATE}
+
+\documentclass[10pt,oneside]{article}
+\usepackage[utf8]{inputenc}
+\setlength\parindent{0pt}
+
+\newcommand{\thetitle}{Single-cell ATAC-seq Signal Extraction and Enhancement with SCATE}
+
+\title{\textsf{\textbf{\thetitle}}}
+\author{Zhicheng Ji\\[1em]Johns Hopkins University,\\ Baltimore, Maryland, USA\\
+      \texttt{zji4@jhu.edu} \and
+      Weiqiang Zhou\\[1em]Johns Hopkins University,\\ Baltimore, Maryland, USA\\
+      \texttt{wzhou14@jhu.edu} \and
+      Hongkai Ji\\[1em]Johns Hopkins University,\\ Baltimore, Maryland, USA\\
+      \texttt{hji@jhsph.edu}}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introductions}
+Single-cell sequencing assay for transposase-accessible chromatin (scATAC-seq) is a new technology for measuring genome-wide regulatory element activities in single cells. With the ability to analyze cells’ distinct behaviors in a heterogeneous cell population, this technology is rapidly transforming biomedical research. Data produced by scATAC-seq are highly sparse and discrete. Existing computational methods typically use these data to analyze regulatory pathway activities in single cells. They cannot accurately measure activities of individual cis-regulatory elements (CREs) due to data sparsity.
+SCATE is a new statistical framework for analyzing scATAC-seq data. SCATE adaptively integrates information from co-activated CREs, similar cells, and publicly available regulome data to substantially increase the accuracy for estimating activities of individual CREs. We show that one can use SCATE to identify cell subpopulations and then accurately reconstruct CRE activities of each subpopulation. The reconstructed signals are accurate even for cell subpopulations consisting of only a few cells, and they significantly improve prediction of transcription factor binding sites. The accurate CRE-level signal reconstruction makes SCATE an unique tool for analyzing regulatory landscape of a heterogeneous cell population using scATAC-seq data.
+
+The main functions of SCATE is demonstrated using the following example of 10 GM12878 and 10 K562 scATAC-seq samples.
+
+\section{Read in and Preprocessing Data}
+
+The following chunk of data read in the bam files into R as GRanges object.
+
+<<>>=
+suppressWarnings(suppressMessages(library(SCATE)))
+set.seed(12345)
+bamlist <- list.files(paste0(system.file(package="SCATE")
+,"/extdata/example"),full.names = T)
+satac <- sapply(sapply(bamlist,readGAlignmentPairs),GRanges)
+@
+      
+The function satacprocess preprocesses the scATAC-seq reads required for other functions of SCATE. It transforms the reads into the midpoint of the reads and filter out samples with small library size.
+      
+<<>>=      
+suppressWarnings(satac <- satacprocess(satac))
+@
+      
+\section{Cell Clustering (Optional)}
+
+The function cellclu will cluster cells based on averaged signal of CRE clusters. 
+
+<<>>=
+cellclu <- cellcluster(satac,genome="hg19",clunum=2,perplexity=5)
+@
+
+Check the results of clustering:      
+<<>>=      
+library(ggplot2)
+plotdata <- data.frame(tSNE1=cellclu$tsne[,1],tSNE2=cellclu$tsne[,2],
+Cluster=as.factor(cellclu$cluster))
+ggplot(plotdata,aes(x=tSNE1,y=tSNE2,col=Cluster)) + geom_point()
+@
+
+\section{SCATE}
+
+The function SCATE will perform SCATE on one or multiple scATAC-seq samples. For example, below code performs SCATE on all cells belonging to cell cluster one:
+<<>>=      
+SCATEres <- SCATE(satac[cellclu$cluster==1],genome="hg19")
+summary(SCATEres)
+@
+
+Users can also supply their own cell cluster (by changing the cellcluster variable):
+<<eval=FALSE>>=    
+cellcluster <- head(names(satac),n=3)
+SCATEres <- SCATE(satac[cellcluster],genome="hg19")
+@
+
+
+\section{Peak Calling}
+
+The function peakcall will perform peak calling on the SCATE results.
+<<>>=      
+peakres <- peakcall(SCATEres,genome="hg19")
+peakres[[1]]
+@
+      
+\section{One line command}      
+The whole process of reading in bam, clustering cell, and performing SCATE is included in the following one line command of SCATE pipeline:
+<<eval=FALSE>>=    
+SCATEpipeline(bamlist,genome="hg19",perplexity=5)
+@
+      
+\end{document}
+
+
