@@ -13,5 +13,3 @@ Remotes: bioc::3.8/GenomicAlignments
 Depends: GenomicAlignments, GenomicRanges, Rtsne, mclust, parallel,
         preprocessCore, splines, splines2, xgboost, R(>= 2.10.0)
 RoxygenNote: 6.1.1
-NeedsCompilation: no
-Packaged: 2019-01-16 03:59:25 UTC; zji4@jhu.edu

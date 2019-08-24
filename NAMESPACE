@@ -3,6 +3,7 @@
 export(SCATE)
 export(SCATEpipeline)
 export(cellcluster)
+export(makedatabase)
 export(peakcall)
 export(satacprocess)
 import(GenomicAlignments)

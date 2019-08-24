@@ -4,12 +4,15 @@
 \alias{SCATE}
 \title{Perform SCATE}
 \usage{
-SCATE(satac, genome, ncores = detectCores())
+SCATE(satac, genome = "hg19", datapath = NULL,
+  ncores = detectCores())
 }
 \arguments{
 \item{satac}{GRanges object or list of GRanges object of scATAC-seq reads. The GRanges should be the middle point of the reads with length of 1 base pair. Use 'satacprocess' to preprocess raw reads.}
 
-\item{genome}{Character variable of either "hg19" or "mm10".}
+\item{genome}{Character variable of either "hg19" or "mm10". Default is 'hg19'.}
+
+\item{datapath}{Character variable of the path to the customized database (eg myfolder/database.rds). The database can be made using 'makedatabase' function. If not null, 'genome' is ignored.}
 
 \item{ncores}{Numeric variable of number of cores to use. If NULL, the maximum number of cores is used.}
 }

@@ -34,17 +34,16 @@ The main functions of SCATE is demonstrated using the following example of 10 GM
 The following chunk of data read in the bam files into R as GRanges object.
 
 <<>>=
-suppressWarnings(suppressMessages(library(SCATE)))
+suppressMessages(library(SCATE))
 set.seed(12345)
-bamlist <- list.files(paste0(system.file(package="SCATE")
-,"/extdata/example"),full.names = T)
+bamlist <- list.files(paste0(system.file(package="SCATE"),"/extdata/example"),full.names = T)
 satac <- sapply(sapply(bamlist,readGAlignmentPairs),GRanges)
 @
       
 The function satacprocess preprocesses the scATAC-seq reads required for other functions of SCATE. It transforms the reads into the midpoint of the reads and filter out samples with small library size.
       
 <<>>=      
-suppressWarnings(satac <- satacprocess(satac))
+satac <- satacprocess(satac)
 @
       
 \section{Cell Clustering (Optional)}
@@ -52,31 +51,22 @@ suppressWarnings(satac <- satacprocess(satac))
 The function cellclu will cluster cells based on averaged signal of CRE clusters. 
 
 <<>>=
-cellclu <- cellcluster(satac,genome="hg19",clunum=2,perplexity=5)
+cellclu <- cellcluster(satac,genome="hg19",perplexity=5)
 @
 
 Check the results of clustering:      
 <<>>=      
 library(ggplot2)
-plotdata <- data.frame(tSNE1=cellclu$tsne[,1],tSNE2=cellclu$tsne[,2],
-Cluster=as.factor(cellclu$cluster))
-ggplot(plotdata,aes(x=tSNE1,y=tSNE2,col=Cluster)) + geom_point()
+ggplot(data.frame(tSNE1=cellclu$tsne[,1],tSNE2=cellclu$tsne[,2],Cluster=as.factor(cellclu$cluster)),aes(x=tSNE1,y=tSNE2,col=Cluster)) + geom_point() + theme_classic()
 @
 
 \section{SCATE}
 
-The function SCATE will perform SCATE on one or multiple scATAC-seq samples. For example, below code performs SCATE on all cells belonging to cell cluster one:
+The function SCATE will perform SCATE on one or multiple scATAC-seq samples.
 <<>>=      
 SCATEres <- SCATE(satac[cellclu$cluster==1],genome="hg19")
 summary(SCATEres)
 @
-
-Users can also supply their own cell cluster (by changing the cellcluster variable):
-<<eval=FALSE>>=    
-cellcluster <- head(names(satac),n=3)
-SCATEres <- SCATE(satac[cellcluster],genome="hg19")
-@
-
 
 \section{Peak Calling}
 
@@ -84,12 +74,6 @@ The function peakcall will perform peak calling on the SCATE results.
 <<>>=      
 peakres <- peakcall(SCATEres,genome="hg19")
 peakres[[1]]
-@
-      
-\section{One line command}      
-The whole process of reading in bam, clustering cell, and performing SCATE is included in the following one line command of SCATE pipeline:
-<<eval=FALSE>>=    
-SCATEpipeline(bamlist,genome="hg19",perplexity=5)
 @
       
 \end{document}
